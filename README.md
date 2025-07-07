@@ -62,6 +62,22 @@ This Django project is a Pokémon-themed web application featuring a comprehensi
 
 3. Run the development server
 
-```bash
-python manage.py runserver
-```
+  ```bash
+  python manage.py runserver
+  ```
+## Docker Installation
+
+You can easily build and run the Pokémon application using Docker.
+
+### Build and Run
+
+1. Build the Docker image:
+
+   ```bash
+   docker-compose build
+   ```
+2. Start the container
+   ```bash
+   docker-compose up
+   ```
+3. The app will be available at http://localhost:8000.
