@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Pokédex{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'Main/styles.css' %}">
+</head>
+<body class="container my-4">
+    <!-- Preloader Pokéball -->
+    <div id="preloader">
+        <div class="pokeball"></div>
+    </div>
+
+    <div class="content" style="display: none;">
+        <header>
+            <nav class="mb-3">
+                <a href="{% url 'index' %}" class="btn btn-outline-primary">Domů</a>
+                <a href="{% url 'search' %}" class="btn btn-outline-success">Hledání</a>
+                <a href="{% url 'compare' %}" class="btn btn-outline-danger">Porovnání</a>
+                <a href="{% url 'arena' %}" class="btn btn-outline-info">Aréna</a>
+                <a href="{% url 'battle_history_list' %}" class="btn btn-outline-dark">Přehled bitev</a>
+            </nav>
+        </header>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Skrýt preloader po načtení DOM
+            setTimeout(function() {
+                document.getElementById("preloader").style.display = "none";
+                document.querySelector(".content").style.display = "block";
+            }, 1000); // 1 sekunda delay pro efekt
+        });
+        
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function () {
+                document.getElementById("preloader").style.display = "block";
+                document.querySelector(".content").style.display = "none";
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Výběr Pokémonů -->
+    <div class="col-md-8">
+      <h2>🏟️ Vyber 3 Pokémony do svého týmu:</h2>
+      <form method="post" id="pokemon-form">
+        {% csrf_token %}
+        <div class="row">
+          {% for p in pokemons %}
+
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+              <div class="card pokemon-card h-100" data-name="{{ p.name }}">
+                <div class="card-body text-center p-2 d-flex flex-column align-items-center justify-content-between" style="cursor: pointer;">
+                  <input type="checkbox" name="selected" value="{{ p.name }}" class="pokemon-checkbox d-none">
+                  <img src="{{ p.sprites.front_default }}" alt="{{ p.name }}" class="pokemon-image mb-2" style="width: 80px; height: 80px;">
+                  <div class="pokemon-name fw-bold">{{ p.name|capfirst }}</div>
+                  <div class="pokemon-stats mt-2">
+                    <small class="text-muted">
+                      {% for stat in p.stats %}
+                        {% if stat.stat.name == 'attack' %}⚔️ {{ stat.base_stat }}
+                        {% elif stat.stat.name == 'defense' %}🛡️ {{ stat.base_stat }}
+                        {% elif stat.stat.name == 'hp' %}❤️ {{ stat.base_stat }}
+                        {% elif stat.stat.name == 'speed' %}⚡ {{ stat.base_stat }}
+                        {% endif %}
+                      {% endfor %}
+                    </small>
+                  </div>
+                  <button type="button" class="btn btn-outline-danger mt-2 select-button">Zvolit</button>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+          <!-- Stránkování -->
+          <div class="pagination justify-content-center mt-4">
+            <nav aria-label="Výběr stránky">
+              <ul class="pagination">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Předchozí">
+                      &laquo; Předchozí
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">&laquo; Předchozí</span></li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                  {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                  {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Další">
+                      Další &raquo;
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">Další &raquo;</span></li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
+
+        </div>
+        <div class="text-center mt-3">
+          <p id="selection-counter" class="text-muted">Vybráno: <span id="selected-count">0</span>/3</p>
+          <button type="submit" class="btn btn-danger btn-lg" id="fight-btn" disabled>
+            🔥 Bojuj!
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Stav týmů -->
+    <div class="col-md-4">
+      {% if user_team %}
+      <div class="teams-status sticky-top">
+        <h3>⚔️ Stav týmů:</h3>
+
+        <div class="user-team mb-4">
+          <h4 class="text-primary">👤 Tvůj tým:</h4>
+          <div class="team-grid">
+            {% for pokemon in user_team %}
+              <div class="team-member card mb-2">
+                <div class="card-body p-2">
+                  <div class="d-flex align-items-center">
+                    <img src="{{ pokemon.sprites.front_default }}" alt="{{ pokemon.name }}" style="width: 40px; height: 40px;" class="me-2">
+                    <div>
+                      <div class="fw-bold">{{ pokemon.name|capfirst }}</div>
+                      <div class="hp-bar">
+                        <div class="progress" style="height: 8px;">
+                          <div class="progress-bar {% if pokemon.hp > 50 %}bg-success{% elif pokemon.hp > 20 %}bg-warning{% else %}bg-danger{% endif %}" 
+                               style="width: {{ pokemon.hp }}%"></div>
+                        </div>
+                        <small>{{ pokemon.hp }} HP</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="cpu-team">
+          <h4 class="text-danger">🤖 Tým počítače:</h4>
+          <div class="team-grid">
+            {% for pokemon in cpu_team %}
+              <div class="team-member card mb-2">
+                <div class="card-body p-2">
+                  <div class="d-flex align-items-center">
+                    <img src="{{ pokemon.sprites.front_default }}" alt="{{ pokemon.name }}" style="width: 40px; height: 40px;" class="me-2">
+                    <div>
+                      <div class="fw-bold">{{ pokemon.name|capfirst }}</div>
+                      <div class="hp-bar">
+                        <div class="progress" style="height: 8px;">
+                          <div class="progress-bar {% if pokemon.hp > 50 %}bg-success{% elif pokemon.hp > 20 %}bg-warning{% else %}bg-danger{% endif %}" 
+                               style="width: {{ pokemon.hp }}%"></div>
+                        </div>
+                        <small>{{ pokemon.hp }} HP</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Log Bitvy -->
+  {% if battle_log %}
+  <div class="row mt-4">
+    <div class="col-12">
+      <hr>
+      <h3>📜 Průběh bitvy:</h3>
+      <div class="battle-log-container">
+        <ul id="battle-log" class="list-group">
+          {% for line in battle_log %}
+            <li class="list-group-item battle-log-item">{{ line|safe }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="text-center mt-4">
+        <h4 class="winner-announcement p-3 rounded" id="winner-text" style="display: none;">
+          {{ winner }}
+        </h4>
+        <button class="btn btn-primary mt-3" onclick="location.reload()">
+          🔄 Nová bitva
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- CSS styly -->
+<style>
+  .pokemon-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+
+  .pokemon-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  .pokemon-card.selected {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+  }
+
+  .pokemon-checkbox {
+    position: absolute;
+    opacity: 0;
+  }
+
+  .pokemon-image {
+    transition: transform 0.3s ease;
+  }
+
+  .pokemon-card:hover .pokemon-image {
+    transform: scale(1.1);
+  }
+
+  .battle-log-item {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease;
+  }
+
+  .battle-log-item.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .battle-log-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .winner-announcement {
+    background: linear-gradient(45deg, #ffd700, #ffed4a);
+    color: #333;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .hp-bar {
+    width: 100%;
+  }
+
+  .teams-status {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const checkboxes = document.querySelectorAll('.pokemon-checkbox');
+  const selectedCount = document.getElementById('selected-count');
+  const fightBtn = document.getElementById('fight-btn');
+  const pokemonCards = document.querySelectorAll('.pokemon-card');
+  const selectButtons = document.querySelectorAll('.select-button');
+  const form = document.getElementById('pokemon-form');
+
+  // --- Funkce pro práci s sessionStorage ---
+  function saveSelectionToStorage() {
+    const selected = Array.from(document.querySelectorAll('.pokemon-checkbox:checked'))
+                          .map(cb => cb.value);
+    sessionStorage.setItem('selectedPokemons', JSON.stringify(selected));
+  }
+
+  function loadSelectionFromStorage() {
+    const selected = JSON.parse(sessionStorage.getItem('selectedPokemons') || '[]');
+    checkboxes.forEach(cb => {
+      cb.checked = selected.includes(cb.value);
+    });
+  }
+
+  function updateSelection() {
+    // Získej aktuálně vybrané Pokémony na této stránce
+    const currentPageSelected = Array.from(document.querySelectorAll('.pokemon-checkbox:checked'))
+                                     .map(cb => cb.value);
+    
+    // Získej všechny vybrané Pokémony ze storage
+    const allSelected = JSON.parse(sessionStorage.getItem('selectedPokemons') || '[]');
+    
+    // Odstraň Pokémony z této stránky ze storage
+    const otherPagesSelected = allSelected.filter(name => 
+      !Array.from(checkboxes).some(cb => cb.value === name)
+    );
+    
+    // Kombinuj výběr z jiných stránek s aktuálním výběrem
+    const totalSelected = [...otherPagesSelected, ...currentPageSelected];
+    
+    // Ulož zpět do storage
+    sessionStorage.setItem('selectedPokemons', JSON.stringify(totalSelected));
+    
+    // Aktualizuj zobrazení
+    selectedCount.textContent = totalSelected.length;
+    fightBtn.disabled = totalSelected.length !== 3;
+
+    pokemonCards.forEach(card => {
+      const checkbox = card.querySelector('.pokemon-checkbox');
+      const button = card.querySelector('.select-button');
+
+      if (checkbox.checked) {
+        card.classList.add('selected');
+        button.textContent = 'Odebrat';
+        button.classList.remove('btn-outline-danger');
+        button.classList.add('btn-danger');
+      } else {
+        card.classList.remove('selected');
+        button.textContent = 'Zvolit';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-outline-danger');
+      }
+    });
+
+    // Pokud už máme 3 vybrané, zakázat výběr dalších
+    if (totalSelected.length >= 3) {
+      checkboxes.forEach(cb => {
+        if (!cb.checked) {
+          cb.disabled = true;
+          cb.closest('.pokemon-card').style.opacity = '0.5';
+        }
+      });
+    } else {
+      checkboxes.forEach(cb => {
+        cb.disabled = false;
+        cb.closest('.pokemon-card').style.opacity = '1';
+      });
+    }
+  }
+
+  // --- Inicializace při načtení stránky ---
+  function initializePage() {
+    // Načti uložený výběr
+    const selected = JSON.parse(sessionStorage.getItem('selectedPokemons') || '[]');
+    
+    // Označ checkboxy pro Pokémony na této stránce
+    checkboxes.forEach(cb => {
+      cb.checked = selected.includes(cb.value);
+    });
+    
+    // Aktualizuj zobrazení
+    updateSelection();
+  }
+
+  // --- Přidání/odebrání výběru pomocí tlačítka ---
+  selectButtons.forEach(button => {
+    button.addEventListener('click', function (e) {
+      const card = e.target.closest('.pokemon-card');
+      const checkbox = card.querySelector('.pokemon-checkbox');
+      const allSelected = JSON.parse(sessionStorage.getItem('selectedPokemons') || '[]');
+      
+      if (!checkbox.disabled) {
+        if (!checkbox.checked && allSelected.length >= 3) {
+          // Už máme 3 vybrané, nedovolíme přidat další
+          return;
+        }
+        checkbox.checked = !checkbox.checked;
+        updateSelection();
+      }
+    });
+  });
+
+  // --- Přidání/odebrání výběru pomocí kliknutí na kartu ---
+  pokemonCards.forEach(card => {
+    card.addEventListener('click', function (e) {
+      if (e.target.type !== 'checkbox' && !e.target.classList.contains('select-button')) {
+        const checkbox = card.querySelector('.pokemon-checkbox');
+        const allSelected = JSON.parse(sessionStorage.getItem('selectedPokemons') || '[]');
+        
+        if (!checkbox.disabled) {
+          if (!checkbox.checked && allSelected.length >= 3) {
+            // Už máme 3 vybrané, nedovolíme přidat další
+            return;
+          }
+          checkbox.checked = !checkbox.checked;
+          updateSelection();
+        }
+      }
+    });
+  });
+
+  // --- Při odeslání formuláře přidej skryté inputy se jmény Pokémonů ---
+  form.addEventListener('submit', function (e) {
+    const selected = JSON.parse(sessionStorage.getItem('selectedPokemons') || '[]');
+
+    // Odstraň předchozí hidden inputy
+    document.querySelectorAll('.hidden-selected').forEach(el => el.remove());
+
+    // Přidej nové hidden inputy
+    selected.forEach(name => {
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'selected';
+      hiddenInput.value = name;
+      hiddenInput.classList.add('hidden-selected');
+      form.appendChild(hiddenInput);
+    });
+  });
+
+  // --- Animace logu bitvy ---
+  const logItems = document.querySelectorAll('.battle-log-item');
+  const winnerText = document.getElementById('winner-text');
+
+  if (logItems.length > 0) {
+    let i = 0;
+    function showNext() {
+      if (i < logItems.length) {
+        logItems[i].classList.add('show');
+        i++;
+        setTimeout(showNext, 800);
+      } else if (winnerText) {
+        setTimeout(() => {
+          winnerText.style.display = 'block';
+        }, 500);
+      }
+    }
+    setTimeout(showNext, 500);
+  }
+
+  // --- Vymazání výběru po kliknutí na "Nová bitva" ---
+  const resetBtn = document.querySelector('button[onclick="location.reload()"]');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('selectedPokemons');
+    });
+  }
+
+  // --- Inicializuj stránku ---
+  initializePage();
+});
+</script>
+{% endblock %}

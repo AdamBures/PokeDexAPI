@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="pokemon-detail container my-4">
+  <h1 class="text-center mb-4">{{ pokemon.name|capfirst }}</h1>
+
+  <div class="text-center mb-4">
+    <img src="{{ pokemon.sprites.front_default }}" alt="{{ pokemon.name }}" class="img-fluid pokemon-image">
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-4 mb-4">
+      <h3>Typy:</h3>
+      <ul class="list-group">
+        {% for t in pokemon.types %}
+          <li class="list-group-item text-capitalize">{{ t.type.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <h3>Statistiky:</h3>
+      <ul class="list-group">
+        {% for stat in pokemon.stats %}
+          <li class="list-group-item text-capitalize">
+            {{ stat.stat.name }}: <strong>{{ stat.base_stat }}</strong>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="col-md-4 mb-4">
+      <h3>Schopnosti:</h3>
+      <ul class="list-group">
+        {% for a in pokemon.abilities %}
+          <li class="list-group-item text-capitalize">{{ a.ability.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+      <h3>Evoluční řetězec:</h3>
+      <ul class="list-group">
+        {% for evo in evolution %}
+          <li class="list-group-item text-capitalize">
+            <a href="{% url 'pokemon_detail' evo %}">{{ evo|capfirst }}</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="text-center mt-5">
+    <a href="{% url 'index' %}" class="btn btn-secondary">← Zpět</a>
+  </div>
+</div>
+
+<style>
+  .pokemon-detail h1 {
+    font-weight: 700;
+    color: #dc3545;
+    text-shadow: 1px 1px 2px #00000033;
+  }
+
+  .pokemon-image {
+    max-width: 150px;
+    height: auto;
+    transition: transform 0.3s ease;
+  }
+
+  .pokemon-image:hover {
+    transform: scale(1.2);
+  }
+
+  h3 {
+    border-bottom: 2px solid #dee2e6;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #343a40;
+  }
+
+  .list-group-item {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    transition: background-color 0.2s ease;
+  }
+
+  .list-group-item:hover {
+    background-color: #f8f9fa;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .btn-secondary {
+    font-size: 1.1rem;
+    padding: 8px 16px;
+  }
+</style>
+{% endblock %}

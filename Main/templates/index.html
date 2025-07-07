@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Pokédex</h1>
+
+<!-- Filtr a řazení -->
+<form method="get" class="row g-2 mb-4 align-items-center">
+    <div class="col-auto">
+        <label for="type" class="col-form-label">Typ:</label>
+    </div>
+    <div class="col-auto">
+        <select id="type" name="type" class="form-select">
+            <option value="">Všechny typy</option>
+            {% for t in all_types %}
+                <option value="{{ t.name }}" {% if t.name == current_type %}selected{% endif %}>
+                    {{ t.name|capfirst }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <label for="sort" class="col-form-label">Řadit podle:</label>
+    </div>
+    <div class="col-auto">
+        <select id="sort" name="sort" class="form-select">
+            {% for value, label in sort_options %}
+                <option value="{{ value }}" {% if value == current_sort %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Použít</button>
+    </div>
+</form>
+
+<!-- Výpis Pokémonů -->
+<div class="row">
+    {% for p in pokemons %}
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-4">
+            <div class="card h-100 text-center">
+                <a href="{% url 'pokemon_detail' p.name %}" class="text-decoration-none text-dark">
+                    <img src="{{ p.sprites.front_default }}" class="card-img-top mx-auto" style="width: 96px; height: 96px;" alt="{{ p.name }}">
+                    <div class="card-body">
+                        <h6 class="card-title mb-0">{{ p.name|capfirst }}</h6>
+                    </div>
+                </a>
+            </div>
+        </div>
+    {% empty %}
+        <p>Nebyli nalezeni žádní Pokémoni.</p>
+    {% endfor %}
+</div>
+
+<!-- Stránkování -->
+<nav aria-label="pagination">
+    <ul class="pagination justify-content-center mt-4">
+        {% if pokemon_page.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pokemon_page.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">&laquo; Předchozí</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Předchozí</span></li>
+        {% endif %}
+
+        {% for num in pokemon_page.paginator.page_range %}
+            {% if pokemon_page.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num >= pokemon_page.number|add:-2 and num <= pokemon_page.number|add:2 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if pokemon_page.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pokemon_page.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">Další &raquo;</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Další &raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}

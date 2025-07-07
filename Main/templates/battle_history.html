@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Historie bitev</h1>
+
+{% if battles %}
+    <div class="list-group">
+    {% for battle in battles %}
+        <div class="list-group-item mb-3">
+            <h5>Bitva {{ battle.created_at|date:"d.m.Y H:i" }} - Výsledek: {{ battle.get_result_display }}</h5>
+            <p><strong>Tým uživatele:</strong>
+                {% for p in battle.user_team.all %}
+                    {{ p.name|capfirst }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Žádní Pokémoni
+                {% endfor %}
+            </p>
+            <p><strong>Tým počítače:</strong>
+                {% for p in battle.cpu_team.all %}
+                    {{ p.name|capfirst }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    Žádní Pokémoni
+                {% endfor %}
+            </p>
+            <details>
+                <summary>Protokol bitvy</summary>
+                <pre>{{ battle.battle_log }}</pre>
+            </details>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <p>Žádné záznamy o bitvách.</p>
+{% endif %}
+
+{% endblock %}

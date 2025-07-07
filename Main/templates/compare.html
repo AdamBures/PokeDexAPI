@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="text-center mb-4">⚔️ Porovnání Pokémonů</h1>
+
+  <!-- Formulář -->
+  <form method="get" class="d-flex justify-content-center mb-5 gap-2">
+    <input type="text" name="p1" class="form-control w-25" placeholder="Pokémon 1" value="{{ request.GET.p1 }}">
+    <input type="text" name="p2" class="form-control w-25" placeholder="Pokémon 2" value="{{ request.GET.p2 }}">
+    <button type="submit" class="btn btn-primary">Porovnat</button>
+  </form>
+
+  {% if p1 and p2 %}
+    <div class="row justify-content-center">
+      <!-- Pokémon 1 -->
+      <div class="col-md-5 mb-4">
+        <div class="card shadow">
+          <div class="card-body text-center">
+            <h3 class="card-title">{{ p1.name|capfirst }}</h3>
+            <img src="{{ p1.sprites.front_default }}" alt="{{ p1.name }}" class="img-fluid mb-3" style="max-height: 150px;">
+            <h5 class="mb-3">Statistiky</h5>
+            <ul class="list-group">
+              {% for stat in merged_stats %}
+                <li class="list-group-item 
+                    {% if stat.p1 != stat.p2 %}
+                      {% if stat.p1 > stat.p2 %} bg-success text-white
+                      {% else %} bg-danger text-white
+                      {% endif %}
+                    {% endif %}">
+                  {{ stat.name|capfirst }}: {{ stat.p1 }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pokémon 2 -->
+      <div class="col-md-5 mb-4">
+        <div class="card shadow">
+          <div class="card-body text-center">
+            <h3 class="card-title">{{ p2.name|capfirst }}</h3>
+            <img src="{{ p2.sprites.front_default }}" alt="{{ p2.name }}" class="img-fluid mb-3" style="max-height: 150px;">
+            <h5 class="mb-3">Statistiky</h5>
+            <ul class="list-group">
+              {% for stat in merged_stats %}
+                <li class="list-group-item 
+                    {% if stat.p1 != stat.p2 %}
+                      {% if stat.p2 > stat.p1 %} bg-success text-white
+                      {% else %} bg-danger text-white
+                      {% endif %}
+                    {% endif %}">
+                  {{ stat.name|capfirst }}: {{ stat.p2 }}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% elif request.GET.p1 or request.GET.p2 %}
+    <p class="text-danger text-center">Jednoho z Pokémonů se nepodařilo najít.</p>
+  {% endif %}
+</div>
+
+<style>
+  .card {
+    border-radius: 10px;
+  }
+
+  .list-group-item {
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+  }
+</style>
+{% endblock %}
